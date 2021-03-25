@@ -15,18 +15,16 @@ void encode(const std::string& in, const std::string& out) {
 		// check if current line is in dict
 		auto itr = hmap.find(line);
 		if(itr == hmap.end()) {
-			//auto p = std::make_pair<std::string, unsigned int>(line, (unsigned)dict.size());
 			itr = hmap.insert({line, (unsigned)dict.size()}).first;
-			//itr = hmap.insert(p).first;
-			//itr = (hmap.insert(std::make_pair<std::string, unsigned int>(line, dict.size()).first;
-			//hmap[line] = dict.size();
 			dict.push_back(line);
 		}
 
 		unsigned e = itr->second;
 		outf << e << "\n";
-		//std::cout << line << "\n";
 	}
+
+	for(unsigned i = 0; i < dict.size(); i++)
+		outf << dict[i] << "\n";
 	
 
 	inf.close();
