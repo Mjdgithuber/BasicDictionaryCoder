@@ -83,6 +83,15 @@ void decode(const std::string& in, const std::string& out) {
 	for(unsigned i = 0; i < dict.size(); i++)
 		std::cout << dict[i] << "\n";
 
+	// decode file
+	inf.seekg(pos); // reset
+	for(unsigned i = 0; i < (d_off / sizeof(unsigned)); i++) {
+		// get dict offset and write to file
+		unsigned off;
+		inf.read((char*) &off, sizeof(unsigned));
+		outf << dict[off] << "\n";
+	}
+
 	inf.close();
 	outf.close();
 }
