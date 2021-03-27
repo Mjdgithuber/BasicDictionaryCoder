@@ -4,9 +4,13 @@
 #include <vector>
 #include <string>
 
+//typedef short unsigned int W_OFFSET_T;
+
+
+template <typename W_OFFSET_T>
 void encode(const std::string& in, const std::string& out) {
 	std::vector<std::string> dict;
-	std::unordered_map<std::string, unsigned int> hmap;
+	std::unordered_map<std::string, W_OFFSET_T> hmap;
 
 	std::string line;
 	std::ifstream inf(in.c_str(), std::ifstream::in);
@@ -20,12 +24,12 @@ void encode(const std::string& in, const std::string& out) {
 		// check if current line is in dict
 		auto itr = hmap.find(line);
 		if(itr == hmap.end()) {
-			itr = hmap.insert({line, (unsigned)dict.size()}).first;
+			itr = hmap.insert({line, (W_OFFSET_T)dict.size()}).first;
 			dict.push_back(line);
 		}
 
 		// get word offset & write to file
-		unsigned w_off = itr->second;
+		W_OFFSET_T w_off = itr->second;
 		outf.write((const char*)(&w_off), sizeof(w_off));
 		d_off += sizeof(w_off);
 	}
@@ -50,6 +54,7 @@ void encode(const std::string& in, const std::string& out) {
 	outf.close();
 }
 
+template <typename W_OFFSET_T>
 void decode(const std::string& in, const std::string& out) {
 	std::vector<std::string> dict;
 	
@@ -61,7 +66,7 @@ void decode(const std::string& in, const std::string& out) {
 	inf.read((char*)(&d_off), sizeof(d_off));
 	inf.read((char*)(&d_size), sizeof(d_size));
 
-	std::cout << "Off: " << d_off << " Size: " << d_size << "\n";
+	//std::cout << "Off: " << d_off << " Size: " << d_size << "\n";
 
 	// jump to dict
 	long pos = inf.tellg();
@@ -80,15 +85,15 @@ void decode(const std::string& in, const std::string& out) {
 	}
 
 	std::cout << "Dict size: " << dict.size() << " -> words:\n";
-	for(unsigned i = 0; i < dict.size(); i++)
-		std::cout << dict[i] << "\n";
+	//for(unsigned i = 0; i < dict.size(); i++)
+	//	std::cout << dict[i] << "\n";
 
 	// decode file
 	inf.seekg(pos); // reset
-	for(unsigned i = 0; i < (d_off / sizeof(unsigned)); i++) {
+	for(unsigned i = 0; i < (d_off / sizeof(W_OFFSET_T)); i++) {
 		// get dict offset and write to file
 		unsigned off;
-		inf.read((char*) &off, sizeof(unsigned));
+		inf.read((char*) &off, sizeof(W_OFFSET_T));
 		outf << dict[off] << "\n";
 	}
 
@@ -97,8 +102,11 @@ void decode(const std::string& in, const std::string& out) {
 }
 
 int main() {
-	encode("test.txt", "out.txt");
-	decode("out.txt", "del_me.txt");
+	encode<short unsigned>("med.txt", "encode.zl");
+	decode<short unsigned>("encode.zl", "decode.txt");
+
+	//encode("test.txt", "out.txt");
+	//decode("out.txt", "del_me.txt");
 
 
 	return 0;
