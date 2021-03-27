@@ -12,7 +12,8 @@ void encode(const std::string& in, const std::string& out) {
 	std::ifstream inf(in.c_str(), std::ifstream::in);
 	std::ofstream outf(out.c_str(), std::ofstream::out | std::ofstream::binary);
 
-	unsigned long long d_off = 12345, d_size = 9;
+	// read cols and encode + write them to out file
+	unsigned long long d_off = 0, d_size;
 	outf.write((const char*)(&d_off), sizeof(d_off));
 	outf.write((const char*)(&d_size), sizeof(d_size));
 	while(inf >> line) {
@@ -26,11 +27,21 @@ void encode(const std::string& in, const std::string& out) {
 		// get word offset & write to file
 		unsigned w_off = itr->second;
 		outf.write((const char*)(&w_off), sizeof(w_off));
+		d_off += sizeof(w_off);
 	}
 
+	// dump dict with nulls to file
 	d_size = dict.size();
-	//outf.write((const char*)(&d_size), sizeof(d_size));
+	for(unsigned i = 0; i < d_size; i++)
+		outf.write(dict[i].c_str(), dict[i].size() + 1);
 
+	// return to output start to write dict info
+	outf.seekp(0);
+	outf.write((const char*)(&d_off), sizeof(d_off));
+	outf.write((const char*)(&d_size), sizeof(d_size));
+
+
+	//outf.write((const char*)(&d_size), sizeof(d_size));
 	//for(unsigned i = 0; i < dict.size(); i++)
 		//outf << dict[i] << "\n";
 	
@@ -51,6 +62,26 @@ void decode(const std::string& in, const std::string& out) {
 	inf.read((char*)(&d_size), sizeof(d_size));
 
 	std::cout << "Off: " << d_off << " Size: " << d_size << "\n";
+
+	// jump to dict
+	long pos = inf.tellg();
+	inf.seekg(pos+d_off);
+
+	char buf;
+	std::string w;
+	while(d_size > 0) {
+		inf.read(&buf, 1);
+		if(buf) w += buf;
+		else { // add to dict
+			dict.push_back(w);
+			d_size--;
+			w.clear();
+		}
+	}
+
+	std::cout << "Dict size: " << dict.size() << " -> words:\n";
+	for(unsigned i = 0; i < dict.size(); i++)
+		std::cout << dict[i] << "\n";
 
 	inf.close();
 	outf.close();
