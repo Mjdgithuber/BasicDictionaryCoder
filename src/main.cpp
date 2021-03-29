@@ -68,6 +68,7 @@ void load_dict(std::vector<std::string>& dict, std::ifstream& in_file, unsigned 
 
 	// read one char at a time to build word
 	std::string w;
+	std::cout << "Dict size " << dict_size << "\n";
 	while(dict_size > 0) {
 		in_file.read(&buf, 1);
 		if(buf) w += buf;
@@ -103,12 +104,19 @@ void decode(const std::string& in, const std::string& out) {
 	//for(unsigned i = 0; i < dict.size(); i++)
 	//	std::cout << dict[i] << "\n";
 
-	// decode file
+	// move file head to data section
 	inf.seekg(pos); // reset
+	if(pos != inf.tellg()) {
+		std::cout << "Failed to decode file!\n";
+		return;
+	}
+
+	// decode file
 	for(unsigned i = 0; i < (d_off / sizeof(W_OFFSET_T)); i++) {
 		// get dict offset and write to file
 		unsigned off;
 		inf.read((char*) &off, sizeof(W_OFFSET_T));
+		//std::cout << "Read " << dict[off] << "\n";
 		outf << dict[off] << "\n";
 	}
 
@@ -116,9 +124,40 @@ void decode(const std::string& in, const std::string& out) {
 	outf.close();
 }
 
-int main() {
-	encode<short unsigned>("med.txt", "encode.zl");
-	decode<short unsigned>("encode.zl", "decode.txt");
+int main(int argc, char** argv) {
+	std::string args[3];
+
+	if(argc != 3 && argc != 4) {
+		std::cout << "Must be run with at 3 or 4 args!\n" <<
+			"\t-c <file_to_compress>\n" <<
+			"\t-d <file_to_decode>\n" <<
+			"\t-q <file_to_query> query_term\n";
+		return 0;
+	}
+
+	for(unsigned i = 0; i < (argc-1) && i < 3; i++)
+		args[i] = argv[i+1];
+
+	if(args[0] == "-c")
+		encode<short unsigned>(args[1], args[1] + ".enc");
+	else if(args[0] == "-d")
+		decode<short unsigned>(args[1], args[1] + ".dec");
+	else
+		std::cout << args[0] << " is not a valid command!\n";
+
+	
+
+	//decode<short unsigned>("encode.zl", "decode.txt");
+	//decode<short unsigned>("med.txt.enc", "dxxxxxxxxecode.txt");
+
+
+
+
+
+	//encode<short unsigned>("med.txt", "encode.zl");
+	//decode<short unsigned>("encode.zl", "decode.txt");
+
+	
 
 	//encode("test.txt", "out.txt");
 	//decode("out.txt", "del_me.txt");
