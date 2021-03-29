@@ -7,6 +7,15 @@
 //typedef short unsigned int W_OFFSET_T;
 
 
+/*void packetize(unsigned offset) {
+	unsigned short first;
+
+	first = offset & 0xefff;
+	while(offset = offset >> 16)
+	
+	first = (1 << 15) | first;
+} */
+
 template <typename W_OFFSET_T>
 void encode(const std::string& in, const std::string& out) {
 	std::vector<std::string> dict;
@@ -54,6 +63,22 @@ void encode(const std::string& in, const std::string& out) {
 	outf.close();
 }
 
+void load_dict(std::vector<std::string>& dict, std::ifstream& in_file, unsigned long long dict_size) {
+	char buf;
+
+	// read one char at a time to build word
+	std::string w;
+	while(dict_size > 0) {
+		in_file.read(&buf, 1);
+		if(buf) w += buf;
+		else { // add to dict
+			dict.push_back(w);
+			dict_size--;
+			w.clear();
+		}
+	}
+}
+
 template <typename W_OFFSET_T>
 void decode(const std::string& in, const std::string& out) {
 	std::vector<std::string> dict;
@@ -71,18 +96,8 @@ void decode(const std::string& in, const std::string& out) {
 	// jump to dict
 	long pos = inf.tellg();
 	inf.seekg(pos+d_off);
-
-	char buf;
-	std::string w;
-	while(d_size > 0) {
-		inf.read(&buf, 1);
-		if(buf) w += buf;
-		else { // add to dict
-			dict.push_back(w);
-			d_size--;
-			w.clear();
-		}
-	}
+	
+	load_dict(dict, inf, d_size);
 
 	std::cout << "Dict size: " << dict.size() << " -> words:\n";
 	//for(unsigned i = 0; i < dict.size(); i++)
