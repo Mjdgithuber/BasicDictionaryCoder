@@ -45,10 +45,17 @@ void encode(const std::string& in, const std::string& out) {
 	outf.close();
 }
 
-void load_dict(std::vector<std::string>& dict, std::ifstream& in_file, unsigned long long dict_size) {
-	char buf;
+bool load_dict(std::vector<std::string>& dict, std::ifstream& in_file, unsigned long long& dict_size, unsigned long long& dict_offset) {
+	// read dict info
+	in_file.read((char*)(&dict_offset), sizeof(dict_offset));
+	in_file.read((char*)(&dict_size), sizeof(dict_size));
+
+	// jump to dict
+	long pos = in_file.tellg();
+	in_file.seekg(pos+dict_offset);
 
 	// read one char at a time to build word
+	char buf;
 	std::string w;
 	std::cout << "Dict size " << dict_size << "\n";
 	while(dict_size > 0) {
@@ -60,6 +67,14 @@ void load_dict(std::vector<std::string>& dict, std::ifstream& in_file, unsigned 
 			w.clear();
 		}
 	}
+
+	// move file head back to data section
+	in_file.seekg(pos);
+	if(pos != in_file.tellg()) {
+		std::cout << "Failed to decode file!\n";
+		return false;
+	}
+	return true;
 }
 
 template <typename W_OFFSET_T>
@@ -71,23 +86,24 @@ void decode(const std::string& in, const std::string& out) {
 
 	// get dict size
 	unsigned long long d_off, d_size;
-	inf.read((char*)(&d_off), sizeof(d_off));
+	/*inf.read((char*)(&d_off), sizeof(d_off));
 	inf.read((char*)(&d_size), sizeof(d_size));
 
 	// jump to dict
 	long pos = inf.tellg();
-	inf.seekg(pos+d_off);
+	inf.seekg(pos+d_off);*/
 	
-	load_dict(dict, inf, d_size);
+	if(!load_dict(dict, inf, d_size, d_off))
+		return;
 
 	std::cout << "Dict size: " << dict.size() << " -> words:\n";
 
 	// move file head to data section
-	inf.seekg(pos); // reset
+	/*inf.seekg(pos); // reset
 	if(pos != inf.tellg()) {
 		std::cout << "Failed to decode file!\n";
 		return;
-	}
+	}*/
 
 	// decode file
 	for(unsigned i = 0; i < (d_off / sizeof(W_OFFSET_T)); i++) {
@@ -116,9 +132,9 @@ int main(int argc, char** argv) {
 		args[i] = argv[i+1];
 
 	if(args[0] == "-c")
-		encode<short unsigned>(args[1], args[1] + ".enc");
+		encode<unsigned>(args[1], args[1] + ".enc");
 	else if(args[0] == "-d")
-		decode<short unsigned>(args[1], args[1] + ".dec");
+		decode<unsigned>(args[1], args[1] + ".dec");
 	else
 		std::cout << args[0] << " is not a valid command!\n";
 
