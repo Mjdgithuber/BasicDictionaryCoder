@@ -4,18 +4,6 @@
 #include <vector>
 #include <string>
 
-//typedef short unsigned int W_OFFSET_T;
-
-
-/*void packetize(unsigned offset) {
-	unsigned short first;
-
-	first = offset & 0xefff;
-	while(offset = offset >> 16)
-	
-	first = (1 << 15) | first;
-} */
-
 template <typename W_OFFSET_T>
 void encode(const std::string& in, const std::string& out) {
 	std::vector<std::string> dict;
@@ -53,12 +41,6 @@ void encode(const std::string& in, const std::string& out) {
 	outf.write((const char*)(&d_off), sizeof(d_off));
 	outf.write((const char*)(&d_size), sizeof(d_size));
 
-
-	//outf.write((const char*)(&d_size), sizeof(d_size));
-	//for(unsigned i = 0; i < dict.size(); i++)
-		//outf << dict[i] << "\n";
-	
-
 	inf.close();
 	outf.close();
 }
@@ -92,8 +74,6 @@ void decode(const std::string& in, const std::string& out) {
 	inf.read((char*)(&d_off), sizeof(d_off));
 	inf.read((char*)(&d_size), sizeof(d_size));
 
-	//std::cout << "Off: " << d_off << " Size: " << d_size << "\n";
-
 	// jump to dict
 	long pos = inf.tellg();
 	inf.seekg(pos+d_off);
@@ -101,8 +81,6 @@ void decode(const std::string& in, const std::string& out) {
 	load_dict(dict, inf, d_size);
 
 	std::cout << "Dict size: " << dict.size() << " -> words:\n";
-	//for(unsigned i = 0; i < dict.size(); i++)
-	//	std::cout << dict[i] << "\n";
 
 	// move file head to data section
 	inf.seekg(pos); // reset
@@ -116,7 +94,6 @@ void decode(const std::string& in, const std::string& out) {
 		// get dict offset and write to file
 		unsigned off;
 		inf.read((char*) &off, sizeof(W_OFFSET_T));
-		//std::cout << "Read " << dict[off] << "\n";
 		outf << dict[off] << "\n";
 	}
 
@@ -144,24 +121,6 @@ int main(int argc, char** argv) {
 		decode<short unsigned>(args[1], args[1] + ".dec");
 	else
 		std::cout << args[0] << " is not a valid command!\n";
-
-	
-
-	//decode<short unsigned>("encode.zl", "decode.txt");
-	//decode<short unsigned>("med.txt.enc", "dxxxxxxxxecode.txt");
-
-
-
-
-
-	//encode<short unsigned>("med.txt", "encode.zl");
-	//decode<short unsigned>("encode.zl", "decode.txt");
-
-	
-
-	//encode("test.txt", "out.txt");
-	//decode("out.txt", "del_me.txt");
-
 
 	return 0;
 }
