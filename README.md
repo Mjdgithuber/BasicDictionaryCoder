@@ -26,6 +26,8 @@ $ ./prog -q <file_to_query> query_term   # Prints # of times query_term shows up
 `g++ main.cpp -o prog -std=c++11`
 
 ## Results & Analysis
+All tests were done on two Intel Xeon v2 processors, however this program doesn't make use of multiple threads to improve performance. 
+
 Running time scales approximately linearly with the size of the input.  The following plot shows the running times of the three given data sets for encoding.  Since my program uses a hashtable to store the mapping between a word and its dictionary location, performance is dominated by the number of entires and their average size.  The three input files share the same spread of data with a different set of unique words, so the running time of each set is essentially just a function of the input size however it will run slighly faster the lower the cardinality of the input file is.
 
 ![](images/encode.png)
