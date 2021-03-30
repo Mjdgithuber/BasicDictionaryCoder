@@ -45,7 +45,8 @@ void encode(const std::string& in, const std::string& out) {
 	outf.close();
 }
 
-bool load_dict(std::vector<std::string>& dict, std::ifstream& in_file, unsigned long long& dict_size, unsigned long long& dict_offset) {
+char load_dict(std::vector<std::string>& dict, std::ifstream& in_file, unsigned long long& dict_size, unsigned long long& dict_offset,
+	const std::string& query) {
 	// read dict info
 	in_file.read((char*)(&dict_offset), sizeof(dict_offset));
 	in_file.read((char*)(&dict_size), sizeof(dict_size));
@@ -55,15 +56,19 @@ bool load_dict(std::vector<std::string>& dict, std::ifstream& in_file, unsigned 
 	in_file.seekg(pos+dict_offset);
 
 	// read one char at a time to build word
+	char ret = -1;
 	char buf;
 	std::string w;
-	std::cout << "Dict size " << dict_size << "\n";
 	while(dict_size > 0) {
 		in_file.read(&buf, 1);
 		if(buf) w += buf;
 		else { // add to dict
 			dict.push_back(w);
 			dict_size--;
+
+			// check for match
+			if(w == query)
+				ret = dict.size() - 1;
 			w.clear();
 		}
 	}
@@ -72,9 +77,9 @@ bool load_dict(std::vector<std::string>& dict, std::ifstream& in_file, unsigned 
 	in_file.seekg(pos);
 	if(pos != in_file.tellg()) {
 		std::cout << "Failed to decode file!\n";
-		return false;
+		return -2;
 	}
-	return true;
+	return ret;
 }
 
 template <typename W_OFFSET_T>
@@ -86,24 +91,9 @@ void decode(const std::string& in, const std::string& out) {
 
 	// get dict size
 	unsigned long long d_off, d_size;
-	/*inf.read((char*)(&d_off), sizeof(d_off));
-	inf.read((char*)(&d_size), sizeof(d_size));
-
-	// jump to dict
-	long pos = inf.tellg();
-	inf.seekg(pos+d_off);*/
 	
-	if(!load_dict(dict, inf, d_size, d_off))
+	if(load_dict(dict, inf, d_size, d_off, "") == -2)
 		return;
-
-	std::cout << "Dict size: " << dict.size() << " -> words:\n";
-
-	// move file head to data section
-	/*inf.seekg(pos); // reset
-	if(pos != inf.tellg()) {
-		std::cout << "Failed to decode file!\n";
-		return;
-	}*/
 
 	// decode file
 	for(unsigned i = 0; i < (d_off / sizeof(W_OFFSET_T)); i++) {
@@ -115,6 +105,30 @@ void decode(const std::string& in, const std::string& out) {
 
 	inf.close();
 	outf.close();
+}
+
+template <typename W_OFFSET_T>
+void query(const std::string& in, const std::string& query) {
+	std::ifstream inf(in.c_str(), std::ifstream::in | std::ifstream::binary);
+
+	int index;
+	unsigned long long d_off, d_size;
+	std::vector<std::string> dict;
+	if((index = load_dict(dict, inf, d_size, d_off, query)) < 0) {
+		std::cout << "'" << query << "' does not show up in " << in << "\n";
+		return;
+	}
+
+	int count = 0;
+	for(unsigned i = 0; i < (d_off / sizeof(W_OFFSET_T)); i++) {
+		unsigned off;
+		inf.read((char*) &off, sizeof(W_OFFSET_T));
+		count += (off == index) ? 1 : 0;
+	}
+
+	std::cout << "'" << query << "' shows up " << count << " times in " << in << "\n";
+
+	inf.close();
 }
 
 int main(int argc, char** argv) {
@@ -135,8 +149,10 @@ int main(int argc, char** argv) {
 		encode<unsigned>(args[1], args[1] + ".enc");
 	else if(args[0] == "-d")
 		decode<unsigned>(args[1], args[1] + ".dec");
+	else if(args[0] == "-q" && argc == 4)
+		query<unsigned>(args[1], args[2]);
 	else
-		std::cout << args[0] << " is not a valid command!\n";
+		std::cout << args[0] << " is " << ((args[0] == "-q") ? "missing query string" : "not a valid command") << "!\n";
 
 	return 0;
 }
