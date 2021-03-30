@@ -14,3 +14,13 @@ This function starts by calling the load_dict function which is responsible for 
 ### Query
 This function is very similar to the decode function as it also relies on the load_dict function, however it makes use of the last arg of load_dict to check if a particular string is present within the dictionary.  If such a string is present then its index is returned, otherwise -1 will be returned.  We then proceed to decode the file with the exception that we are no longer generating an output file, instead we just count the number of index matches and print the results.
 
+## Code Usage
+Running the program without args will give its usage.
+```bash
+$ ./prog -c <file_to_compress>           # Compressed file as file_to_compress.enc
+$ ./prog -d <file_to_decode>             # Decoded file as file_to_decode.dec
+$ ./prog -q <file_to_query> query_term   # Prints # of times query_term shows up in file_to_query
+```
+
+### Building
+`g++ main.cpp -o prog -std=c++11`
