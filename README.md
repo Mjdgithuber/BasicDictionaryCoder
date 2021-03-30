@@ -24,3 +24,8 @@ $ ./prog -q <file_to_query> query_term   # Prints # of times query_term shows up
 
 ### Building
 `g++ main.cpp -o prog -std=c++11`
+
+## Results & Analysis
+Running time scales approximately linearly with the size of the input.  The following plot shows the running times of the three given data sets for encoding.  Since my program uses a hashtable to store the mapping between a word and its dictionary location, performance is dominated by the number of entires and their average size.  The three input files share the same spread of data with a different set of unique words, so the running time of each set is essentially just a function of the input size however it will run slighly faster the lower the cardinality of the input file is.
+
+All three data sets have a compression ratio of about 2 with my program with encoding using an unsigned 4 byte integer for the dictionary offsets.  It should be noted that the two smaller files can make use of a 2 byte signed integer which about doubles the compression ratio to 4.  The larger files has more than 65536 unique entries and therefore offsets need more than 2 bytes worth of encoded data.  I didn't include a plot because the compression ratio (using my program) is essentially identical due to how these files were generated/distributed.
