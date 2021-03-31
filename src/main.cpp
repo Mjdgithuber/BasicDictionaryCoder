@@ -47,6 +47,7 @@ void encode(const std::string& in, const std::string& out) {
 
 char load_dict(std::vector<std::string>& dict, std::ifstream& in_file, unsigned long long& dict_size, unsigned long long& dict_offset,
 	const std::string& query) {
+
 	// read dict info
 	in_file.read((char*)(&dict_offset), sizeof(dict_offset));
 	in_file.read((char*)(&dict_size), sizeof(dict_size));
@@ -85,7 +86,8 @@ char load_dict(std::vector<std::string>& dict, std::ifstream& in_file, unsigned 
 template <typename W_OFFSET_T>
 void decode(const std::string& in, const std::string& out) {
 	std::vector<std::string> dict;
-	
+
+	// make file handles	
 	std::ifstream inf(in.c_str(), std::ifstream::in | std::ifstream::binary);
 	std::ofstream outf(out.c_str(), std::ofstream::out);
 
@@ -111,6 +113,7 @@ template <typename W_OFFSET_T>
 void query(const std::string& in, const std::string& query) {
 	std::ifstream inf(in.c_str(), std::ifstream::in | std::ifstream::binary);
 
+	// get dict and ensure query term exists
 	int index;
 	unsigned long long d_off, d_size;
 	std::vector<std::string> dict;
@@ -119,6 +122,7 @@ void query(const std::string& in, const std::string& query) {
 		return;
 	}
 
+	// if exists count the # of times it appears
 	int count = 0;
 	for(unsigned i = 0; i < (d_off / sizeof(W_OFFSET_T)); i++) {
 		unsigned off;
