@@ -41,3 +41,6 @@ The final plot shows the runtime of the query function.  Again it has a similar 
 ![](images/query.png)
 
 All three data sets have a compression ratio of about 2 with my program with encoding using an unsigned 4 byte integer for the dictionary offsets.  It should be noted that the two smaller files can make use of a 2 byte signed integer which about doubles the compression ratio to 4.  The larger files has more than 65536 unique entries and therefore offsets need more than 2 bytes worth of encoded data.  I didn't include a plot because the compression ratio (using my program) is essentially identical due to how these files were generated/distributed.
+
+## Conclusion
+This was a very simple encoder that could be optimized in several ways.  As far as the compression ratio goes, the most straightforward approach would be to have the offset size be adaptive to the minimum size in bytes, using one of the bits to store whether or not the next byte is also part of the size.  Another way to speed the program up would be the use of buffers when executing file IO as right now typically the read/writes are very small.  The code was written to be as clear as possible while remaining concise.  In addition, the program can only decode a file made on a system with the same endianness.
